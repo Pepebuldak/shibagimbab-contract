@@ -16,6 +16,13 @@ async function main() {
     [signerAddress, nftContractAddress] // Initialize arguments
   );
   console.log(`NEXT_PUBLIC_CLAIM_MANAGER_CONTRACT=${claimManagerAddress}`);
+  // Transfer NFT ownership to claim manager
+  const nftContract = await ethers.getContractAt(
+    "ShibaGimbapNFT",
+    nftContractAddress
+  );
+  await nftContract.transferOwnership(claimManagerAddress);
+  console.log("Ownership transferred");
 }
 
 main()

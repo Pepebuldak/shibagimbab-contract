@@ -8,14 +8,14 @@ import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.
 import "./interfaces/IShibaGimbabNFT.sol";
 
 contract ClaimManager is Initializable, PausableUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgradeable {
-    address public trustedSigner; 
-    IShibaGimbabNFT public nftContract; 
+    address public trustedSigner;
+    IShibaGimbabNFT public nftContract;
 
-    mapping(uint256 => bool) public claimedTokens; 
+    mapping(uint256 => bool) public claimedTokens;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
-        _disableInitializers(); 
+        _disableInitializers();
     }
 
     function initialize(address _trustedSigner, address _nftContract) public initializer {
@@ -27,16 +27,26 @@ contract ClaimManager is Initializable, PausableUpgradeable, OwnableUpgradeable,
         nftContract = IShibaGimbabNFT(_nftContract);
     }
 
-    function claimNFT(uint256 tokenId, bytes memory signature) public whenNotPaused nonReentrant {
-        require(!claimedTokens[tokenId], "Token already claimed");
+    function claimNFTs(uint256[] memory tokenIds, bytes[] memory signatures) public whenNotPaused nonReentrant {
+        require(tokenIds.length == signatures.length, "Mismatched arrays");
 
-        bytes32 messageHash = keccak256(abi.encodePacked(msg.sender, tokenId));
-        address recoveredSigner = recoverSigner(messageHash, signature);
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            uint256 tokenId = tokenIds[i];
+            bytes memory signature = signatures[i];
 
-        require(recoveredSigner == trustedSigner, "Invalid signature");
+            require(!claimedTokens[tokenId], "Token already claimed");
 
-        claimedTokens[tokenId] = true;
-        nftContract.mint(msg.sender, tokenId);
+            // EIP-191 hash
+            bytes32 messageHash = keccak256(
+                abi.encodePacked("\x19Ethereum Signed Message:\n32", keccak256(abi.encodePacked(msg.sender, tokenId)))
+            );
+            address recoveredSigner = recoverSigner(messageHash, signature);
+
+            require(recoveredSigner == trustedSigner, "Invalid signature");
+
+            claimedTokens[tokenId] = true;
+            nftContract.mint(msg.sender, tokenId);
+        }
     }
 
     function recoverSigner(bytes32 hash, bytes memory signature) internal pure returns (address) {
