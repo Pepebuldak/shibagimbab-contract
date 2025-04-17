@@ -5,7 +5,7 @@ async function main() {
   const [owner] = await ethers.getSigners();
   console.log("[Owner account address]: " + owner.address);
 
-  const claimManagerAddress = "0x32a5EA447c0B3B7ac7CE751e06392F6fbb3caCaA";
+  const rewardManagerAddress = "0x5E132f98753A94d804e90F08613e19954a12bb59";
 
   //If the OpenZeppelin files are lost, uncomment the upgrades.forceImport section and run it first. Then, make changes to the source code to introduce modifications. After that, call upgradesProxy again, and the upgrade should proceed successfully.
   /*
@@ -14,7 +14,7 @@ async function main() {
   */
 
   // contract upgrade proxy
-  const upgraded = await upgradesProxy(claimManagerAddress, "ClaimManager");
+  const upgraded = await upgradesProxy(rewardManagerAddress, "RewardManager");
   console.log("Upgrade Finish: " + JSON.stringify(upgraded));
 }
 
